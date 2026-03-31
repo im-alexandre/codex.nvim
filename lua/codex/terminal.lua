@@ -255,8 +255,11 @@ local function get_visual_selection()
 	local selection_type = vim.fn.visualmode() or mode or "v"
 	local start_pos = vim.fn.getpos("v")
 	local end_pos = vim.fn.getpos(".")
-	print('selection_type', selection_type, 'start', vim.inspect(start_pos), 'end', vim.inspect(end_pos))
-	log.debug("visual positions", { selection_type = selection_type, start_pos = start_pos, end_pos = end_pos })
+	log.debug("visual positions", {
+		selection_type = selection_type,
+		start_pos = start_pos,
+		end_pos = end_pos,
+	})
 
 	if start_pos[2] == 0 or end_pos[2] == 0 then
 		if needs_restore or mode:match("^[vV\22]") then
