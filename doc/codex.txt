@@ -26,6 +26,7 @@ CONFIGURATION                                                          *codex-co
         enable_session_cache = true
         log_tail_enabled = false
         focus_after_send = false
+        insert_after_send = false
 
     Example (lazy.nvim):
 >
@@ -79,6 +80,8 @@ TROUBLESHOOTING                                                        *codex-tr
       outside `$PATH`.
     - Enable `focus_after_send` to jump straight into the Codex terminal
       after sending a selection or buffer.
+    - Combine `focus_after_send` with `insert_after_send` if you want to
+      land in terminal-insert mode immediately after sending.
 
 =============================================================================
 CREDITS                                                                *codex-credits*

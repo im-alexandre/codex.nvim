@@ -53,6 +53,7 @@ All settings are optional. These are the defaults:
   },
   codex_cmd = { "codex" },
   focus_after_send = false,
+  insert_after_send = false,
   log_level = "warn",
   autostart = false,
 }
@@ -60,7 +61,7 @@ All settings are optional. These are the defaults:
 
 Setting `split = "float"` opens Codex in a centered floating window. Horizontal and vertical splits honor `size` (use a fraction ≤ 1 for percentages or an absolute number for rows/columns).
 
-When `focus_after_send = true`, the plugin automatically moves the cursor to the Codex terminal after sending a visual selection or buffer so you can review or submit immediately. Set `log_level = "debug"` to emit detailed traces at `stdpath('state') .. '/codex.nvim.log'` for troubleshooting. Tabs in selections respect your buffer settings: if `expandtab` is enabled the plugin expands tabs using the current `tabstop`; otherwise tabs are passed through unchanged. Enable `autostart = true` to spin up the Codex CLI in the background without opening the terminal window.
+When `focus_after_send = true`, the plugin automatically moves the cursor to the Codex terminal after sending a visual selection or buffer. Set `insert_after_send = true` alongside it if you also want to enter insert mode immediately, which mirrors a "send then keep typing in Codex" workflow. Set `log_level = "debug"` to emit detailed traces at `stdpath('state') .. '/codex.nvim.log'` for troubleshooting. Tabs in selections respect your buffer settings: if `expandtab` is enabled the plugin expands tabs using the current `tabstop`; otherwise tabs are passed through unchanged. Enable `autostart = true` to spin up the Codex CLI in the background without opening the terminal window.
 
 ## License
 

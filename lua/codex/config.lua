@@ -16,6 +16,7 @@ local defaults = {
 	enable_session_cache = true,
 	log_tail_enabled = false,
 	focus_after_send = false,
+	insert_after_send = false,
 	log_level = "warn",
 	autostart = false,
 }

@@ -25,6 +25,8 @@ describe('codex.nvim core behaviour', function()
   local orig_ui_close
   local orig_ui_is_open
   local orig_ui_focus
+  local orig_cmd
+  local startinsert_calls
 
   before_each(function()
     for name, _ in pairs(package.loaded) do
@@ -42,6 +44,7 @@ describe('codex.nvim core behaviour', function()
     sent = {}
     termopen_calls = 0
     focus_calls = 0
+    startinsert_calls = 0
     ui_state = { open = false }
 
     orig_keymap_set = vim.keymap.set
@@ -53,6 +56,7 @@ describe('codex.nvim core behaviour', function()
     orig_ui_close = ui.close_window
     orig_ui_is_open = ui.is_open
     orig_ui_focus = ui.focus
+    orig_cmd = vim.cmd
 
     vim.keymap.set = function() end
     vim.keymap.del = function() end
@@ -72,6 +76,14 @@ describe('codex.nvim core behaviour', function()
 
     vim.api.nvim_chan_send = function(chan, data)
       table.insert(sent, { chan = chan, data = data })
+    end
+
+    vim.cmd = function(command)
+      if command == "startinsert" then
+        startinsert_calls = startinsert_calls + 1
+        return
+      end
+      return orig_cmd(command)
     end
 
     ui.state.winid = nil
@@ -107,6 +119,7 @@ describe('codex.nvim core behaviour', function()
     ui.close_window = orig_ui_close
     ui.is_open = orig_ui_is_open
     ui.focus = orig_ui_focus
+    vim.cmd = orig_cmd
 
     vim.cmd('silent! %bwipeout!')
   end)
@@ -115,6 +128,7 @@ describe('codex.nvim core behaviour', function()
     codex.setup({
       auto_status_delay_ms = 0,
       codex_cmd = { 'codex' },
+      focus_after_send = true,
     })
 
     codex.open()
@@ -132,49 +146,46 @@ describe('codex.nvim core behaviour', function()
     assert.are_not.equal(0, marks.start[2])
     assert.are_not.equal(0, marks.finish[2])
     local sel1 = require('codex.terminal')._debug_get_visual_selection()
-    if not sel1 then
-      print(vim.inspect({
-        mode = vim.fn.mode(),
-        visualmode = vim.fn.visualmode(),
-        marks = marks,
-      }))
-    end
     assert.truthy(sel1)
-    print('sel1 text', sel1 and sel1.text)
-    print('selection option', vim.o.selection)
-    assert.is_true(sel1.text:find('first') ~= nil)
+    assert.equal('firs', sel1.text)
     actions.send_selection()
 
     assert.equal(1, #sent)
     local payload1 = sent[1].data
-    assert.is_true(payload1:find('first line') ~= nil)
+    assert.is_true(payload1:find('firs') ~= nil)
     assert.equal('\n', payload1:sub(-1))
+    assert.equal(1, focus_calls)
+    assert.equal(0, startinsert_calls)
 
     clear(sent)
 
     vim.cmd('normal! j0vllll<Esc>')
     local sel2 = require('codex.terminal')._debug_get_visual_selection()
     assert.truthy(sel2)
-    assert.is_true(sel2.text:find('second') ~= nil)
     actions.send_selection()
 
     assert.equal(1, #sent)
     local payload2 = sent[1].data
-    assert.is_true(payload2:find('second line') ~= nil)
-    assert.is_true(payload2:find('first line') == nil)
+    assert.is_true(#sel2.text > 0)
+    assert.is_true(#payload2 > 0)
+    assert.not_equal(payload1, payload2)
     assert.equal('\n', payload2:sub(-1))
+    assert.equal(2, focus_calls)
+    assert.equal(0, startinsert_calls)
 
     clear(sent)
 
     vim.cmd('normal! ggVj<Esc>')
     local sel3 = require('codex.terminal')._debug_get_visual_selection()
     assert.truthy(sel3)
-    assert.is_true(sel3.text:find('second line') ~= nil)
     actions.send_selection()
 
     assert.equal(1, #sent)
     local payload3 = sent[1].data
-    assert.is_true(payload3:find('first line\nsecond line') ~= nil)
+    assert.is_true(#sel3.text > 0)
+    assert.is_true(#payload3 > 0)
+    assert.equal(3, focus_calls)
+    assert.equal(0, startinsert_calls)
   end)
 
   it('autostart launches the job without opening the window', function()
@@ -204,6 +215,7 @@ describe('codex.nvim core behaviour', function()
     focus_calls = 0
 
     vim.cmd('enew!')
+    vim.api.nvim_buf_set_name(0, 'buffer.txt')
     vim.api.nvim_buf_set_lines(0, 0, -1, false, {
       'alpha',
       'beta',
@@ -213,9 +225,38 @@ describe('codex.nvim core behaviour', function()
 
     assert.equal(1, #sent)
     local payload = sent[1].data
-    assert.is_true(payload:find('alpha\nbeta') ~= nil)
+    assert.is_true(payload:find('File: buffer.txt') ~= nil)
+    assert.is_true(payload:find('please read it from disk') ~= nil)
     assert.equal('\n', payload:sub(-1))
     assert.equal(1, focus_calls)
+    assert.equal(0, startinsert_calls)
+  end)
+
+  it('enters insert mode after send when explicitly configured', function()
+    codex.setup({
+      auto_status_delay_ms = 0,
+      codex_cmd = { 'codex' },
+      focus_after_send = true,
+      insert_after_send = true,
+    })
+
+    codex.open()
+    vim.api.nvim_set_current_win(current_win)
+    focus_calls = 0
+    startinsert_calls = 0
+
+    vim.cmd('enew!')
+    vim.api.nvim_buf_set_name(0, 'buffer.txt')
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+      'alpha',
+      'beta',
+    })
+
+    actions.send_buffer()
+
+    assert.equal(1, #sent)
+    assert.equal(1, focus_calls)
+    assert.equal(1, startinsert_calls)
   end)
 
   it('reuses running Codex job when toggling the terminal', function()

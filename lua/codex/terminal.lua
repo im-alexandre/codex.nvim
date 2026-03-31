@@ -39,6 +39,25 @@ local function enter_terminal_mode(bufnr)
 	vim.cmd("startinsert")
 end
 
+local function focus_terminal_input()
+	local winid = ui.state.winid
+	if not winid or not api.nvim_win_is_valid(winid) then
+		return
+	end
+
+	ui.focus()
+end
+
+local function enter_focused_terminal_input()
+	local winid = ui.state.winid
+	if not winid or not api.nvim_win_is_valid(winid) then
+		return
+	end
+
+	ui.focus()
+	vim.cmd("startinsert")
+end
+
 local function strip_ansi(line)
 	return line:gsub("\27%[[0-9;]*[A-Za-z]", "")
 end
@@ -216,7 +235,11 @@ function M.send(text, opts)
 	end
 
 	if conf.focus_after_send and opts.focus ~= false then
-		ui.focus()
+		if conf.insert_after_send then
+			enter_focused_terminal_input()
+		else
+			focus_terminal_input()
+		end
 	end
 end
 
