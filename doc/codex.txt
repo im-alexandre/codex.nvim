@@ -54,7 +54,10 @@ LUA API                                                                *codex-ap
     require("codex").send(text[, opts])
             Send arbitrary text to the Codex CLI. When `opts.submit` is
             `true` (the default) a carriage return is sent after a short
-            delay to execute the command.
+            delay to execute the command. If Codex is not running or its
+            window is closed, sending opens it on demand. Pass
+            `opts.open_window = false` to send to a background Codex job
+            without reopening the window.
 
     require("codex").actions.send_selection()
             Send the current visual selection.
@@ -78,6 +81,8 @@ TROUBLESHOOTING                                                        *codex-tr
       error output.
     - Override `codex_cmd` with the absolute path when Codex is installed
       outside `$PATH`.
+    - You do not need to call `open()` before `send()`, `send_selection()`,
+      or `send_buffer()`: they will start or reopen Codex as needed.
     - Enable `focus_after_send` to jump straight into the Codex terminal
       after sending a selection or buffer.
     - Combine `focus_after_send` with `insert_after_send` if you want to

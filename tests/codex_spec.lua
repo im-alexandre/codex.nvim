@@ -203,6 +203,27 @@ describe('codex.nvim core behaviour', function()
     assert.is_false(ui_state.open)
   end)
 
+  it('opens Codex on demand when sending without calling open first', function()
+    codex.setup({
+      auto_status_delay_ms = 0,
+      codex_cmd = { 'codex' },
+    })
+
+    vim.cmd('enew!')
+    vim.api.nvim_buf_set_name(0, 'buffer.txt')
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+      'alpha',
+      'beta',
+    })
+
+    actions.send_buffer()
+
+    assert.equal(1, termopen_calls)
+    assert.is_true(ui_state.open)
+    assert.equal(1, #sent)
+    assert.is_true(sent[1].data:find('File: buffer.txt') ~= nil)
+  end)
+
   it('sends full buffer with newline and focuses when configured', function()
     codex.setup({
       auto_status_delay_ms = 0,
@@ -230,6 +251,28 @@ describe('codex.nvim core behaviour', function()
     assert.equal('\n', payload:sub(-1))
     assert.equal(1, focus_calls)
     assert.equal(0, startinsert_calls)
+  end)
+
+  it('can send to a background Codex job without reopening the window', function()
+    codex.setup({
+      autostart = true,
+      auto_status_delay_ms = 0,
+      codex_cmd = { 'codex' },
+    })
+
+    vim.wait(50, function()
+      return termopen_calls > 0
+    end)
+
+    ui_state.open = false
+    clear(sent)
+
+    actions.send('background payload', { submit = false, open_window = false })
+
+    assert.equal(1, termopen_calls)
+    assert.is_false(ui_state.open)
+    assert.equal(1, #sent)
+    assert.equal('background payload', sent[1].data)
   end)
 
   it('enters insert mode after send when explicitly configured', function()

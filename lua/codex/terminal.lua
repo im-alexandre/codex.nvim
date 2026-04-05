@@ -108,7 +108,7 @@ local function ensure_terminal_buffer()
 end
 
 local function start_job(conf, opts)
-	ops = opts or {}
+	opts = opts or {}
 	local open_window = opts.open_window
 	if open_window == nil then
 		open_window = true
@@ -199,8 +199,14 @@ function M.toggle()
 	end
 end
 
-local function ensure_open_for_send(conf)
-	if not ensure_job(conf) then
+local function ensure_terminal_for_send(conf, opts)
+	opts = opts or {}
+	local open_window = opts.open_window
+	if open_window == nil then
+		open_window = true
+	end
+
+	if not ensure_job(conf, { open_window = open_window }) then
 		return false
 	end
 	return true
@@ -212,7 +218,7 @@ function M.send(text, opts)
 		return
 	end
 	local conf = config.get()
-	if not ensure_open_for_send(conf) then
+	if not ensure_terminal_for_send(conf, opts) then
 		return
 	end
 

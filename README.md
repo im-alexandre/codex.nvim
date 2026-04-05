@@ -26,7 +26,9 @@ Add `codex.nvim` to your plugin manager. With [lazy.nvim](https://github.com/fol
 ## Usage
 
 - `require("codex").open()` / `close()` / `toggle()` control the terminal
+- `require("codex").send(text[, opts])` sends text and opens Codex on demand
 - `require("codex").actions.send_selection()` shares the active visual selection
+- `require("codex").actions.send_buffer()` shares the current buffer reference without requiring a prior `open()`
 
 Example manual mappings:
 
@@ -61,7 +63,7 @@ All settings are optional. These are the defaults:
 
 Setting `split = "float"` opens Codex in a centered floating window. Horizontal and vertical splits honor `size` (use a fraction ≤ 1 for percentages or an absolute number for rows/columns).
 
-When `focus_after_send = true`, the plugin automatically moves the cursor to the Codex terminal after sending a visual selection or buffer. Set `insert_after_send = true` alongside it if you also want to enter insert mode immediately, which mirrors a "send then keep typing in Codex" workflow. Set `log_level = "debug"` to emit detailed traces at `stdpath('state') .. '/codex.nvim.log'` for troubleshooting. Tabs in selections respect your buffer settings: if `expandtab` is enabled the plugin expands tabs using the current `tabstop`; otherwise tabs are passed through unchanged. Enable `autostart = true` to spin up the Codex CLI in the background without opening the terminal window.
+Sending text, a visual selection, or a buffer automatically starts Codex and opens its window when needed, so a separate `open()` call is optional. Pass `opts.open_window = false` to `require("codex").send()` if you want to keep a background Codex job hidden. When `focus_after_send = true`, the plugin automatically moves the cursor to the Codex terminal after sending a visual selection or buffer. Set `insert_after_send = true` alongside it if you also want to enter insert mode immediately, which mirrors a "send then keep typing in Codex" workflow. Set `log_level = "debug"` to emit detailed traces at `stdpath('state') .. '/codex.nvim.log'` for troubleshooting. Tabs in selections respect your buffer settings: if `expandtab` is enabled the plugin expands tabs using the current `tabstop`; otherwise tabs are passed through unchanged. Enable `autostart = true` to spin up the Codex CLI in the background without opening the terminal window.
 
 ## License
 
